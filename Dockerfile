@@ -5,14 +5,14 @@
 # =============================================================================
 
 # TODO(step-4a): set the builder base image as node:20.11-slim and name the stage "builder".
-FROM node:20-alpine AS builder
+FROM node:20.11-slim AS builder
 #   Do NOT use `node:latest` — we want reproducible builds across the cohort.
 
 WORKDIR /app
 
 # TODO(step-4b): copy package.json and package-lock.json, then install deps.
-COPY app/package*.json ./
-RUN npm install --omit=dev && npm install express@latest pg@latest --omit=dev
+COPY app/package.json app/package-lock.json ./
+RUN npm ci --omit=dev
 
 # TODO(step-4c): copy the rest of the app source into /app.
 COPY app/ .
@@ -22,7 +22,14 @@ COPY app/ .
 # =============================================================================
 
 # TODO(step-4d): set the runtime base image (same tag as step-4a for consistency).
-FROM node:20-alpine
+FROM node:20.11-slim
+
+# Refresh Debian security updates inherited from the pinned Node base image.
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/* \
+              /usr/local/lib/node_modules/npm \
+              /usr/local/lib/node_modules/corepack
 
 WORKDIR /app
 
